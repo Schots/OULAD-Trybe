@@ -1,5 +1,4 @@
-import pandas as pd
-import display
+#Utilities Module
 
 def plot_mean_bar(dataframe,x_col_list,y_col):
     if len(x_col_list) > 1:
@@ -16,9 +15,17 @@ def plot_mean_bar(dataframe,x_col_list,y_col):
              .plot(kind = 'barh'))
     return ax
 
-# Utils
+def get_target(dataframe,target_name):
+    TARGET_MAP = {'Pass':'Pass','Fail':'Fail','Distinction':'Pass'}
+    df = dataframe.copy()
+    df[target_name] = df[target_name].map(TARGET_MAP)
+    return df
 
-def categorical_mean(dataframe,categorical):
+def categorical_cardinality(dataframe):
+    df = dataframe.copy()
+    return {col:df[col].nunique() for col in df if df[col].dtype == 'object'}
+
+def categorical_mean(dataframe,categorical,target):
     """Calcula a razao entre a media global do target e a media para cada valor possivel 
     da variavel categorica.
      ---------------------------------------------------------------------------
@@ -26,16 +33,15 @@ def categorical_mean(dataframe,categorical):
      ---------------------------------------------------------------------------
        Output: Um objeto Ipython Display contendo dataframes
     """
-    
     df = dataframe.copy()
-    global_mean = df.reproved.mean()
+    global_mean = df[target].mean()
     for col in categorical:
-        df_group = df.groupby(col).reproved.agg(['mean'])
+        df_group = df.groupby(col)[target].agg(['mean'])
         df_group['rate'] = df_group['mean'] / global_mean
         df_group.sort_values("rate",inplace = True,ascending = False)
         display(df_group)
         
-def numerical_mean(dataframe,numerical,n_quantiles):
+def numerical_mean(dataframe,numerical,n_quantiles,target):
     """Calcula a razao entre a media global do target e a media para cada quartil
     da variavel numerica.
      ---------------------------------------------------------------------------
@@ -44,9 +50,9 @@ def numerical_mean(dataframe,numerical,n_quantiles):
        Output: Um objeto Ipython Display contendo dataframes"""
     
     df = dataframe.copy()
-    global_mean = df.reproved.mean()
+    global_mean = df[target].mean()
     for col in numerical:
-        df_group = df.groupby(pd.Series(pd.qcut(df[col],q = n_quantiles))).reproved.agg(['mean'])
+        df_group = df.groupby(pd.Series(pd.qcut(df[col],q = n_quantiles)))[target].agg(['mean'])
         df_group['rate'] = df_group['mean'] / global_mean
         df_group.sort_values("rate",inplace = True,ascending = False)
         display(df_group)
